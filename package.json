@@ -1,0 +1,23 @@
+{
+  "name": "smiling-jackal",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w apps/bot && npm run build -w apps/web",
+    "dev": "concurrently -n bot,web -c blue,green \"npm:dev -w apps/bot\" \"npm:dev -w apps/web\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prisma": "^6.16.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "zod": "^3.23.8"
+  }
+}

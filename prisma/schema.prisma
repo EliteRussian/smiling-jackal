@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Guild {
+  id           String   @id
+  name         String?
+  createdAt    DateTime @default(now())
+  config       GuildConfig?
+  infractions  Infraction[]
+  logs         LogEntry[]
+}
+
+model GuildConfig {
+  guildId          String  @id
+  logChannelId     String?
+  welcomeChannelId String?
+  verifyRoleId     String?
+  memberRoleId     String?
+  staffRoleIds     String? // CSV
+  automodJson      Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  guild            Guild    @relation(fields: [guildId], references: [id])
+}
+
+model Infraction {
+  id        String   @id @default(cuid())
+  guildId   String
+  userId    String
+  modId     String
+  type      String   // warn | mute | ban | kick | timeout
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  guild     Guild    @relation(fields: [guildId], references:[id])
+
+  @@index([guildId, userId])
+}
+
+model LogEntry {
+  id        String   @id @default(cuid())
+  guildId   String
+  type      String   // message_delete | edit | join | leave | mod_action | config_change
+  data      Json
+  createdAt DateTime @default(now())
+  guild     Guild    @relation(fields: [guildId], references:[id])
+
+  @@index([guildId, createdAt])
+}
+
+model ReactionRole {
+  id        String   @id @default(cuid())
+  guildId   String
+  channelId String
+  messageId String
+  emoji     String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  @@index([guildId, messageId])
+}
+
+model KbEntry {
+  id        String   @id @default(cuid())
+  guildId   String
+  title     String
+  content   String
+  embedding Bytes?   // pgvector stored via bytea in Prisma
+  status    String   @default("approved") // draft | approved
+  createdBy String?
+  updatedAt DateTime @updatedAt
+
+  @@index([guildId, status])
+}
+
+model UserMemory {
+  id        String   @id @default(cuid())
+  guildId   String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  @@index([guildId, userId])
+}
+
+model MessageStat {
+  id        String   @id @default(cuid())
+  guildId   String
+  channelId String
+  userId    String
+  ts        DateTime @default(now())
+  @@index([guildId, ts])
+  @@index([channelId, ts])
+  @@index([userId, ts])
+}
+
+model AiMetric {
+  id           String   @id @default(cuid())
+  guildId      String
+  kind         String   // public | dm | staff
+  latencyMs    Int
+  usedFallback Boolean  @default(false)
+  ts           DateTime @default(now())
+  @@index([guildId, ts])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  guildId   String
+  type      String
+  title     String
+  startsAt  DateTime
+  endsAt    DateTime?
+  channelId String
+  createdAt DateTime @default(now())
+}
+
+model EventRsvp {
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
+  status  String // going | maybe | declined
+}
+
+model DailyGuildStat {
+  date     DateTime
+  guildId  String
+  dau      Int
+  messages Int
+  joins    Int
+  leaves   Int
+
+  @@id([date, guildId])
+}
+
+model ModerationKpi {
+  date               DateTime
+  guildId            String
+  incidents          Int
+  automodIncidents   Int
+  medianResponseSec  Int
+
+  @@id([date, guildId])
+}
+
+model VerifyStat {
+  date                 DateTime
+  guildId              String
+  newJoins             Int
+  verified             Int
+  medianVerifyMinutes  Int
+
+  @@id([date, guildId])
+}

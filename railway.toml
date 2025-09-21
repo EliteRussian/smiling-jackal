@@ -1,0 +1,12 @@
+[project]
+name = "mobs-all-in-one"
+
+[[services]]
+name = "bot"
+root = "apps/bot"
+start = "node dist/index.js"
+
+[[services]]
+name = "web"
+root = "apps/web"
+start = "node dist/server.js"
